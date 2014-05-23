@@ -11,8 +11,8 @@ from cmd import Cmd
 
 class FTPShell(Cmd):
 
-    intro = 'Welcome to SFTP shell. Type help to list commands. \n'
     prompt = 'SFTP>>> '
+    intro = 'Welcome to SFTP shell. Type help to list commands. \n'
 
     def do_setuser(self, arg):
         'Set username or use default.'\
@@ -54,6 +54,8 @@ class FTPShell(Cmd):
         self.trans = paramiko.Transport((self.host, self.port))
         self.trans.connect(username=self.username, password=self.password)
         self.sftp = paramiko.SFTPClient.from_transport(self.trans)
+        self.sftp.chdir('.')
+        self.root_dir = self.sftp.getcwd()
         print '\nConnected'
 
     def do_list(self, args):
@@ -69,7 +71,7 @@ class FTPShell(Cmd):
         'Change directory to path passed. cd .. goes up 1 directory.'\
         ' No arg goes to root'
         if len(args) == 0:
-            self.sftp.chdir('.')
+            self.sftp.chdir(self.root_dir)
         elif args == '..' and self.sftp.getcwd():
             'Super convoluted and needs to be changed'
             cwd = self.sftp.getcwd()
@@ -81,12 +83,39 @@ class FTPShell(Cmd):
         else:
             self.sftp.chdir(args)
 
+    def do_get(self, args):
+        'Download file from server to local by passing filename'
+        if len(args) == 0:
+            print 'Must pass filename'
+        else:
+            localpath = raw_input('Enter path for downloaded file (default %s)' % os.getcwd())
+            if localpath == '':
+                localpath = os.getcwd() + '/' + args
+            remotepath = self.sftp.getcwd() + '/' + args
+            print 'Download Started'
+            self.sftp.get(remotepath, localpath)
+            print 'Download Completed'
+
+    def do_put(self, args):
+        'Upload file from local to server by passing full file path and remote path'
+        if len(args) == 0:
+            print 'Must pass filename'
+        else:
+            localpath = args
+            remotepath = raw_input('Please enter full path for upload to remote server')
+            print 'Upload Started'
+            self.sftp.put(localpath, remotepath)
+            print 'Upload Completed'
+
     def do_quit(self, args):
         """Quits shell and closes FTP connection"""
         print "Closing Connection"
-        self.trans.close()
-        raise SystemExit
+        try:
+            self.trans.close()
+            raise SystemExit
+        except:
+            raise SystemExit
 
 if __name__ == '__main__':
     shell = FTPShell()
-    shell.cmdloop('Starting SFTP Shell...')
+    shell.cmdloop()
