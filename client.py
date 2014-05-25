@@ -15,17 +15,14 @@ class FTPShell(Cmd):
     intro = 'Welcome to SFTP shell. Type help to list commands. \n'
 
     def do_setuser(self, arg):
-        'Set username or use default.'\
-        ' To set, pass command as >>> setuser user.'\
-        '\nTo use default, simply type >>> setuser'
+        'Set username or use default. To set, pass command as >>> setuser user.\nTo use default, simply type >>> setuser'
         if len(arg) == 0:
             self.username = "anonymous"
         else:
             self.username = arg
 
     def do_setpass(self, arg):
-        'Set password or use default. To set, pass command as >>> setpass' \
-        ' \nTo use default, simply type >>> setpass default'
+        'Set password or use default. To set, pass command as >>> setpass \nTo use default, simply type >>> setpass default'
         if len(arg) == 0:
             self.password = getpass.getpass()
         elif arg == 'default':
@@ -41,8 +38,7 @@ class FTPShell(Cmd):
             self.host = arg
 
     def do_setport(self, arg):
-        'Set port by passing arg as >>> setport port\n' + \
-        'To use default port simply type >>> setport'
+        'Set port by passing arg as >>> setport port\nTo use default port simply type >>> setport'
         if len(arg) == 0:
             self.port = 22
         else:
@@ -63,16 +59,15 @@ class FTPShell(Cmd):
         dirlist = self.sftp.listdir_attr('.')
         for file in dirlist:
             if S_ISDIR(file.st_mode):
-                print file, ' folder ', '\n'
+                print file.filename, '(folder)\n'
             elif S_ISREG(file.st_mode):
-                print file, ' file', '\n'
+                print file.filename, '(file)\n'
 
     def do_cd(self, args):
-        'Change directory to path passed. cd .. goes up 1 directory.'\
-        ' No arg goes to root'
+        'Change directory to path passed. cd .. goes up 1 directory. No arg goes to root'
         if len(args) == 0:
             self.sftp.chdir(self.root_dir)
-        elif args == '..' and self.sftp.getcwd():
+        elif args == '..':
             'Super convoluted and needs to be changed'
             cwd = self.sftp.getcwd()
             cwd_reverse = cwd[::-1]
@@ -102,10 +97,21 @@ class FTPShell(Cmd):
             print 'Must pass filename'
         else:
             localpath = args
-            remotepath = raw_input('Please enter full path for upload to remote server')
+            remotepath = raw_input('Please enter path for upload to remote server (default %s)' % self.sftp.getcwd())
+            if remotepath == '':
+                remotepath = self.sftp.getcwd()
             print 'Upload Started'
             self.sftp.put(localpath, remotepath)
             print 'Upload Completed'
+
+    def do_disconnect(self, args):
+        'Closes open connection'
+        print 'Closing open connection'
+        if self.trans.is_active():
+            self.trans.close()
+            print 'Connection closed'
+        else:
+            print 'No open connections'
 
     def do_quit(self, args):
         """Quits shell and closes FTP connection"""
@@ -118,4 +124,5 @@ class FTPShell(Cmd):
 
 if __name__ == '__main__':
     shell = FTPShell()
+    os.system('clear')
     shell.cmdloop()
