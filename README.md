@@ -9,6 +9,10 @@ hosting on the web.
 
 ## Running
 
+*THIS PACKAGE REQUIRES PARAMIKO*
+
+[Paramiko download](http://www.paramiko.org/installing.html)
+
 To run this client, simply download and run the client.py file from the command
 line. To view a list of the commands and read a basic description of the
 commands, simply type help <command>.
