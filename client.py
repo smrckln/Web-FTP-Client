@@ -68,13 +68,7 @@ class FTPShell(Cmd):
         if len(args) == 0:
             self.sftp.chdir(self.root_dir)
         elif args == '..':
-            'Super convoluted and needs to be changed'
-            cwd = self.sftp.getcwd()
-            cwd_reverse = cwd[::-1]
-            index = cwd_reverse.find('/')
-            cwd_reverse = cwd_reverse[index+1:]
-            new_dir = cwd_reverse[::-1]
-            self.sftp.chdir(new_dir)
+            self.sftp.chdir('..')
         else:
             self.sftp.chdir(args)
 
