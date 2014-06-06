@@ -7,7 +7,9 @@
     paramiko would get hairy
 
 '''
-
+import os
+from stat import S_ISDIR
+from stat import S_ISREG
 import paramiko
 
 class SFTP():
@@ -17,14 +19,47 @@ class SFTP():
         self.host = 'localhost'
         self.port = 22
         self.trans = paramiko.Transport((self.host, self.port))
+        self.cwd = '.'
 
-    def connect(self, user='', passwd='', host='localhost', port=22):
-        self.trans = paramiko.Transport((host, port))
-        self.trans.connect(username=user, password=passwd)
-        self.sftp = paramiko.SFTPClient.from_transport(self.trans)
+    def connect(self, user='anonymous', passwd='anonymous@', host='localhost', port=22):
+        ''' connects to host/port with user/pass
+            returns true if connected
+        '''
+        try:
+            self.trans = paramiko.Transport((host, port))
+            self.trans.connect(username=user, password=passwd)
+            self.sftp = paramiko.SFTPClient.from_transport(self.trans)
+            self.sftp.chdir(self.cwd)
 
-        return self.trans.is_active()
+            return self.trans.is_authenticated()
+        except:
+            return False
+
+    def get_cwd(self):
+        ''' Returns current working directory'''
+        return self.sftp.getcwd()
+
+    def chdir(self, path='.'):
+        ''' Changes directory to given path
+            Default path -> .
+        '''
+        self.sftp.chdir(path)
+
+    def list_files(self):
+        ''' Returns list of files in current directory '''
+        files = []
+        dirlist = self.sftp.listdir_attr(self.sftp.getcwd())
+        for file in dirlist:
+            if S_ISDIR(file.st_mode):
+                files.append("(folder) " + file.filename)
+            elif S_ISREG(file.st_mode):
+                files.append("(file) " + file.filename)
+        return files
+
+    def isActive(self):
+        #print self.trans.is_authenticated(), 'isActive def'
+        return self.trans.is_authenticated()
 
     def close(self):
-        if self.trans.is_active():
+        if self.trans.is_authenticated():
             self.trans.close()

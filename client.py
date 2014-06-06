@@ -56,7 +56,7 @@ class FTPShell(Cmd):
 
     def do_list(self, args):
         """List files in current directory"""
-        dirlist = self.sftp.listdir_attr('.')
+        dirlist = self.sftp.listdir_attr(self.sftp.getcwd())
         for file in dirlist:
             if S_ISDIR(file.st_mode):
                 print file.filename, '(folder)\n'
