@@ -29,7 +29,11 @@ class FileTree(QTreeView):
         self.index = self.model.index(path)
 
     def get_path(self):
-        return self.model.filePath(self.index)
+        if self.selectedIndexes():
+            index = self.selectedIndexes()[0]
+            return self.model.filePath(index)
+        else:
+            return self.model.filePath(self.index)
 
 class Login(QDialog):
     '''
@@ -160,9 +164,33 @@ class Form(QWidget):
         remotepath = self.view.get_path()
         localpath = QFileDialog.getSaveFileName(self, "Save file",
                                                 os.path.join(os.getcwd(),'untitled'))
+                                                
+        success = self.sftp.get(remotepath, localpath[0])
+
+        if success:
+            QMessageBox.information(self, 'Success', 'File successfully downloaded')
+        else:
+            QMessageBox.information(self, 'Error', 'Error retrieving file')
+
+        self.view.clearSelection()
 
     def upload(self):
-        pass
+        self.view.clearSelection()
+
+        localpath = QFileDialog.getOpenFileName(self, 'Choose file',
+                                                os.environ['HOME'])
+
+        temp_index = localpath[0].rfind('/')
+        temp_path = localpath[0][temp_index:]
+
+        remotepath = self.view.get_path() + temp_path
+
+        success = self.sftp.put(remotepath, localpath[0])
+
+        if success:
+            QMessageBox.information(self, 'Success', 'File successfully uploaded')
+        else:
+            QMessageBox.information(self, 'Error', 'Error uploading file')
 
     def closeEvent(self, event):
         if not self.login_attempted:

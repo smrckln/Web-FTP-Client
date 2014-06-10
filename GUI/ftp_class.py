@@ -8,6 +8,7 @@
 
 '''
 import os
+import traceback
 from stat import S_ISDIR
 from stat import S_ISREG
 import paramiko
@@ -55,6 +56,28 @@ class SFTP():
             elif S_ISREG(file.st_mode):
                 files.append("(file) " + file.filename)
         return files
+
+    def get(self, remotepath, localpath):
+        ''' Takes in local and remote paths and performs a get request
+            Returns success of action
+        '''
+        try:
+            self.sftp.get(remotepath, localpath)
+            return True
+        except Exception as e:
+            print e
+            return False
+
+    def put(self, remotepath, localpath):
+        ''' Takes in local and remote paths and performs put
+            Returns success of action
+        '''
+        try:
+            self.sftp.put(localpath, remotepath)
+            return True
+        except Exception as e:
+            print e
+            return False
 
     def is_active(self):
         return self.trans.is_authenticated()
